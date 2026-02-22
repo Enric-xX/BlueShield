@@ -2,15 +2,15 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Blue Shield | Control Center</title>
+    <title>Blue Shield | Elite Center</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
         :root {
             --bg: #0a0c10;
-            --sidebar: #11141b;
+            --sidebar: #0d1117;
             --accent: #3081f7;
+            --grok: #eb2f96; /* Color para Grok */
             --glass: rgba(255, 255, 255, 0.05);
-            --text: #c9d1d9;
         }
 
         body { 
@@ -19,104 +19,146 @@
             font-family: 'Inter', sans-serif; overflow: hidden; 
         }
 
-        /* --- SIDEBAR --- */
+        /* --- SIDEBAR ELITE --- */
         .sidebar {
-            width: 70px; background: var(--sidebar);
+            width: 75px; background: var(--sidebar);
             display: flex; flex-direction: column; align-items: center;
             padding: 20px 0; border-right: 1px solid var(--glass);
-            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
             z-index: 100; overflow-y: auto; overflow-x: hidden;
         }
-        .sidebar:hover { width: 220px; }
-        .sidebar::-webkit-scrollbar { width: 2px; }
+        .sidebar:hover { width: 230px; }
+        .sidebar::-webkit-scrollbar { width: 3px; background: transparent; }
+        .sidebar::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 10px; }
 
-        .logo-nav { width: 45px; height: 45px; border-radius: 10px; cursor: pointer; transition: 0.3s; border: 1px solid var(--accent); }
-        .logo-nav:hover { transform: rotate(10deg) scale(1.1); }
+        .logo-box { 
+            width: 45px; height: 45px; border-radius: 12px; 
+            margin-bottom: 30px; border: 2px solid var(--accent); 
+            cursor: pointer; transition: 0.3s; 
+            display: flex; align-items: center; justify-content: center;
+            overflow: hidden;
+        }
+        .logo-box img { width: 100%; height: 100%; object-fit: cover; }
+        .logo-box:hover { box-shadow: 0 0 20px rgba(48, 129, 247, 0.5); transform: scale(1.05); }
 
         .nav-item {
-            width: 85%; padding: 12px; margin: 4px 0;
+            width: 88%; padding: 12px; margin: 3px 0;
             border-radius: 12px; cursor: pointer;
-            display: flex; align-items: center; transition: 0.2s;
+            display: flex; align-items: center; transition: 0.2s ease;
+            color: #8b949e;
         }
-        .nav-item:hover { background: var(--accent); color: white; }
-        .nav-label { display: none; margin-left: 15px; font-weight: 600; white-space: nowrap; font-size: 0.85em; }
-        .sidebar:hover .nav-label { display: block; }
+        .nav-item:hover { 
+            background: rgba(255, 255, 255, 0.03); 
+            color: white; 
+            box-shadow: inset 0 0 10px rgba(48, 129, 247, 0.1);
+        }
+        .nav-item.active { background: var(--accent); color: white; }
+        
+        .nav-icon { font-size: 1.2em; min-width: 30px; text-align: center; }
+        .nav-text { display: none; margin-left: 15px; font-weight: 600; white-space: nowrap; font-size: 0.85em; }
+        .sidebar:hover .nav-text { display: block; }
+
+        /* Estilo especial para Grok */
+        .nav-item-grok:hover { color: var(--grok) !important; }
 
         /* --- CONTENIDO --- */
         .main { flex: 1; display: flex; flex-direction: column; position: relative; }
 
         .top-bar {
-            background: var(--sidebar); padding: 10px 20px;
+            background: var(--sidebar); padding: 12px 25px;
             display: flex; align-items: center; gap: 15px;
             border-bottom: 1px solid var(--glass);
         }
 
         #urlInput {
             flex: 1; background: #010409; border: 1px solid #30363d;
-            border-radius: 20px; padding: 8px 15px; color: var(--accent);
-            outline: none; font-family: monospace;
+            border-radius: 20px; padding: 10px 18px; color: var(--accent);
+            outline: none; font-family: 'Consolas', monospace; font-size: 0.9em;
         }
 
-        /* --- PÁGINA DE INICIO (HOME) --- */
+        /* --- HOME --- */
         #home-screen {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: radial-gradient(circle at center, #161b22 0%, #0a0c10 100%);
+            background: radial-gradient(circle at center, #11141b 0%, #0a0c10 100%);
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            z-index: 10; transition: 0.5s;
+            z-index: 10; transition: 0.5s ease-in-out;
         }
-
-        .home-logo { width: 120px; border-radius: 25px; margin-bottom: 20px; box-shadow: 0 0 30px rgba(48, 129, 247, 0.4); }
-        .home-title { font-size: 2.5em; font-weight: 800; color: white; margin-bottom: 30px; letter-spacing: -1px; }
-        .home-title span { color: var(--accent); }
-
-        .search-container { width: 600px; position: relative; }
-        .search-container input {
+        .home-logo { width: 110px; border-radius: 20px; margin-bottom: 25px; border: 2px solid var(--accent); }
+        .search-box { width: 550px; }
+        .search-box input {
             width: 100%; padding: 18px 25px; border-radius: 30px;
-            background: #161b22; border: 2px solid #30363d;
+            background: #161b22; border: 1px solid #30363d;
             color: white; font-size: 1.1em; outline: none; transition: 0.3s;
+            text-align: center;
         }
-        .search-container input:focus { border-color: var(--accent); box-shadow: 0 0 20px rgba(48, 129, 247, 0.2); }
+        .search-box input:focus { border-color: var(--accent); box-shadow: 0 0 25px rgba(48, 129, 247, 0.15); }
 
-        /* --- VISOR --- */
+        /* --- VIEW --- */
         iframe { width: 100%; height: 100%; border: none; background: white; }
-
-        .hidden { opacity: 0; pointer-events: none; transform: scale(1.1); }
+        .hidden { opacity: 0; pointer-events: none; transform: translateY(20px); }
     </style>
 </head>
 <body>
 
     <div class="sidebar">
-        <img src="logo.jpg" class="logo-nav" onclick="goHome()">
-        <div style="margin-bottom: 20px;"></div>
+        <div class="logo-box" onclick="goHome()">
+            <img src="logo.jpg" alt="Logo">
+        </div>
         
-        <div class="nav-item" onclick="openWeb('https://gemini.google.com')">✨ <span class="nav-text">Gemini AI</span></div>
-        <div class="nav-item" onclick="openWeb('https://aistudio.google.com')">🤖 <span class="nav-text">AI Studio</span></div>
-        <div class="nav-item" onclick="openWeb('https://mail.google.com')">📧 <span class="nav-text">Gmail</span></div>
-        <div class="nav-item" onclick="openWeb('https://drive.google.com')">☁️ <span class="nav-text">Google Drive</span></div>
-        <div class="nav-item" onclick="openWeb('https://github.com')">🐙 <span class="nav-text">GitHub</span></div>
-        <div class="nav-item" onclick="openWeb('https://lovable.dev')">💛 <span class="nav-text">Lovable.dev</span></div>
-        <div class="nav-item" onclick="openWeb('https://jsfiddle.net')">🎻 <span class="nav-text">JSFiddle</span></div>
-        <div class="nav-item" onclick="openWeb('https://codepen.io')">🖋️ <span class="nav-text">CodePen</span></div>
-        <div class="nav-item" onclick="openWeb('https://www.passwordmonster.com')">👾 <span class="nav-text">Pass Monster</span></div>
-        <div class="nav-item" onclick="openWeb('https://iplogger.org/es/')">📍 <span class="nav-text">IP Logger</span></div>
-        <div class="nav-item" onclick="openWeb('https://technical.city/es')">📊 <span class="nav-text">Technical City</span></div>
-        <div class="nav-item" onclick="openWeb('https://learn-anything.xyz')">🧠 <span class="nav-text">Learn Anything</span></div>
+        <div class="nav-item nav-item-grok" onclick="openWeb('https://x.com/i/grok')">
+            <span class="nav-icon">✖️</span><span class="nav-text">Grok AI</span>
+        </div>
+        <div class="nav-item" onclick="openWeb('https://aistudio.google.com')">
+            <span class="nav-icon">🤖</span><span class="nav-text">AI Studio</span>
+        </div>
+        <div class="nav-item" onclick="openWeb('https://lovable.dev')">
+            <span class="nav-icon">💛</span><span class="nav-text">Lovable.dev</span>
+        </div>
+
+        <hr style="width:60%; border:0; border-top:1px solid var(--glass); margin: 10px 0;">
+
+        <div class="nav-item" onclick="openWeb('https://mail.google.com')">
+            <span class="nav-icon">📧</span><span class="nav-text">Gmail</span>
+        </div>
+        <div class="nav-item" onclick="openWeb('https://drive.google.com')">
+            <span class="nav-icon">☁️</span><span class="nav-text">Google Drive</span>
+        </div>
+        <div class="nav-item" onclick="openWeb('https://github.com')">
+            <span class="nav-icon">🐙</span><span class="nav-text">GitHub</span>
+        </div>
+        <div class="nav-item" onclick="openWeb('https://jsfiddle.net')">
+            <span class="nav-icon">🎻</span><span class="nav-text">JSFiddle</span>
+        </div>
+
+        <hr style="width:60%; border:0; border-top:1px solid var(--glass); margin: 10px 0;">
+
+        <div class="nav-item" onclick="openWeb('https://www.passwordmonster.com')">
+            <span class="nav-icon">👾</span><span class="nav-text">Pass Monster</span>
+        </div>
+        <div class="nav-item" onclick="openWeb('https://iplogger.org/es/')">
+            <span class="nav-icon">📍</span><span class="nav-text">IP Logger</span>
+        </div>
+        <div class="nav-item" onclick="openWeb('https://technical.city/es')">
+            <span class="nav-icon">📊</span><span class="nav-text">Technical City</span>
+        </div>
+        <div class="nav-item" onclick="openWeb('https://learn-anything.xyz')">
+            <span class="nav-icon">🧠</span><span class="nav-text">Learn Anything</span>
+        </div>
     </div>
 
     <div class="main">
         <div class="top-bar">
-            <button onclick="goHome()" style="background:none; border:none; color:var(--accent); cursor:pointer; font-size:1.2em;">🏠</button>
-            <input type="text" id="urlInput" placeholder="Introduce URL o busca...">
-            <button onclick="navigate('urlInput')" style="background:var(--accent); border:none; color:white; padding:8px 15px; border-radius:15px; cursor:pointer; font-weight:bold;">IR</button>
+            <button onclick="goHome()" style="background:none; border:none; color:var(--accent); cursor:pointer; font-size:1.4em;">🏠</button>
+            <input type="text" id="urlInput" placeholder="Navega seguro con Blue Shield...">
+            <button onclick="navigate('urlInput')" style="background:var(--accent); border:none; color:white; padding:10px 22px; border-radius:20px; cursor:pointer; font-weight:bold;">EJECUTAR</button>
         </div>
 
         <div id="home-screen">
             <img src="logo.jpg" class="home-logo">
-            <h1 class="home-title">BLUE <span>SHIELD</span></h1>
-            <div class="search-container">
-                <input type="text" id="homeSearch" placeholder="¿Qué quieres investigar hoy, Enric?">
+            <h1 style="margin:0 0 30px 0; font-weight:800; letter-spacing:-1px;">BLUE <span style="color:var(--accent)">SHIELD</span></h1>
+            <div class="search-box">
+                <input type="text" id="homeSearch" placeholder="¿Qué vamos a crackear hoy, Enric?">
             </div>
-            <p style="margin-top:20px; color:#484f58; font-size:0.9em;">Navegación Protegida por Blue Shield Elite</p>
         </div>
 
         <iframe id="viewport" src="about:blank"></iframe>
@@ -127,13 +169,14 @@
         const viewport = document.getElementById('viewport');
 
         function openWeb(url) {
-            const protected = ['google.com', 'github.com', 'lovable.dev', 'aistudio'];
-            const isProtected = protected.some(d => url.includes(d));
+            // Webs que no permiten iframes por seguridad
+            const blocked = ['google.com', 'github.com', 'lovable.dev', 'aistudio', 'x.com', 'grok'];
+            const isBlocked = blocked.some(d => url.includes(d));
 
             home.classList.add('hidden');
             
-            if (isProtected) {
-                window.open(url, '_blank', 'width=1200,height=800');
+            if (isBlocked) {
+                window.open(url, '_blank', 'width=1250,height=850,menubar=no,toolbar=no');
             } else {
                 viewport.src = url;
             }
@@ -145,7 +188,7 @@
             
             let url = val.includes('.') && !val.includes(' ') ? 
                 (val.startsWith('http') ? val : 'https://' + val) : 
-                'https://www.bing.com/search?q=' + encodeURIComponent(val); // Bing permite más iframes que Google
+                'https://www.bing.com/search?q=' + encodeURIComponent(val);
             
             openWeb(url);
         }
@@ -157,7 +200,6 @@
             document.getElementById('urlInput').value = "";
         }
 
-        // Listeners para el Enter
         document.getElementById('homeSearch').addEventListener("keypress", (e) => {
             if (e.key === "Enter") navigate('homeSearch');
         });
