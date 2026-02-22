@@ -2,211 +2,84 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Blue Shield | Elite Hub</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <title>Blue Shield Elite | Web OS</title>
     <style>
-        :root {
-            --bg: #0a0c10;
-            --sidebar: #11141b;
-            --accent: #3081f7;
-            --glass: rgba(255, 255, 255, 0.05);
-            --danger: #ff4444;
-        }
-
-        body { 
-            margin: 0; 
-            display: flex; 
-            height: 100vh; 
-            background: var(--bg); 
-            color: white; 
-            font-family: 'Inter', sans-serif; 
-            overflow: hidden;
-        }
-
-        /* --- SIDEBAR INTELIGENTE --- */
-        .sidebar {
-            width: 70px;
-            background: var(--sidebar);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 20px 0;
-            border-right: 1px solid var(--glass);
-            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            z-index: 100;
-        }
-
+        :root { --bg: #0d1117; --bar: #161b22; --accent: #3081f7; --text: #c9d1d9; }
+        body { margin: 0; display: flex; height: 100vh; background: var(--bg); font-family: 'Segoe UI', sans-serif; color: white; overflow: hidden; }
+        
+        /* Sidebar con Scroll para tantas webs */
+        .sidebar { width: 80px; background: var(--bar); display: flex; flex-direction: column; align-items: center; padding: 15px 0; border-right: 1px solid #30363d; transition: 0.3s; overflow-y: auto; }
         .sidebar:hover { width: 220px; }
+        .sidebar::-webkit-scrollbar { width: 3px; }
 
-        .logo-container {
-            display: flex;
-            align-items: center;
-            width: 100%;
-            padding: 0 15px;
-            margin-bottom: 30px;
-        }
+        .logo { width: 50px; border-radius: 10px; margin-bottom: 20px; border: 2px solid var(--accent); }
+        
+        .nav-item { width: 85%; padding: 12px; margin: 4px 0; border-radius: 10px; cursor: pointer; display: flex; align-items: center; transition: 0.2s; white-space: nowrap; }
+        .nav-item:hover { background: var(--accent); color: white; }
+        .nav-text { display: none; margin-left: 15px; font-weight: 500; font-size: 0.9em; }
+        .sidebar:hover .nav-text { display: block; }
 
-        .logo-img {
-            width: 40px;
-            height: 40px;
-            border-radius: 8px;
-            object-fit: cover;
-        }
-
-        .brand-name {
-            display: none;
-            margin-left: 12px;
-            font-weight: 700;
-            color: var(--accent);
-            letter-spacing: 1px;
-        }
-
-        .sidebar:hover .brand-name { display: block; }
-
-        .nav-item {
-            width: 85%;
-            padding: 12px;
-            margin: 5px 0;
-            border-radius: 12px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            transition: 0.2s;
-            color: #8b949e;
-        }
-
-        .nav-item:hover { 
-            background: var(--accent); 
-            color: white;
-            box-shadow: 0 4px 15px rgba(48, 129, 247, 0.3);
-        }
-
-        .nav-label { 
-            display: none; 
-            margin-left: 15px; 
-            font-weight: 600; 
-            white-space: nowrap; 
-        }
-
-        .sidebar:hover .nav-label { display: block; }
-
-        /* --- CONTENIDO PRINCIPAL --- */
-        .main-content { flex: 1; display: flex; flex-direction: column; position: relative; }
-
-        .top-bar {
-            background: var(--sidebar);
-            padding: 12px 25px;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            border-bottom: 1px solid var(--glass);
-        }
-
-        .shield-badge {
-            font-size: 0.75rem;
-            padding: 4px 10px;
-            border: 1px solid #00ff88;
-            color: #00ff88;
-            border-radius: 20px;
-            font-weight: bold;
-            text-transform: uppercase;
-        }
-
-        #urlInput {
-            flex: 1;
-            background: #010409;
-            border: 1px solid #30363d;
-            border-radius: 25px;
-            padding: 10px 20px;
-            color: var(--accent);
-            font-family: 'Consolas', monospace;
-            outline: none;
-            transition: 0.3s;
-        }
-
-        #urlInput:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(48, 129, 247, 0.2); }
-
-        .btn {
-            background: var(--accent);
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 20px;
-            cursor: pointer;
-            font-weight: 700;
-            transition: 0.2s;
-        }
-
-        .btn:hover { transform: translateY(-2px); filter: brightness(1.1); }
-
-        /* --- ÁREA DEL VISOR --- */
-        .browser-body { flex: 1; background: white; }
+        /* Main Area */
+        .main { flex: 1; display: flex; flex-direction: column; }
+        .top-bar { background: var(--bar); padding: 12px 20px; display: flex; gap: 10px; align-items: center; }
+        input { flex: 1; background: #010409; border: 1px solid #30363d; border-radius: 20px; padding: 10px 15px; color: #58a6ff; outline: none; }
+        
+        .view-container { flex: 1; background: #f0f0f0; position: relative; }
         iframe { width: 100%; height: 100%; border: none; }
-
+        
+        .status-badge { font-size: 0.7em; background: #238636; padding: 4px 10px; border-radius: 15px; }
     </style>
 </head>
 <body>
 
-    <div class="sidebar">
-        <div class="logo-container">
-            <img src="logo.jpg" class="logo-img" alt="Logo">
-            <span class="brand-name">BLUE SHIELD</span>
-        </div>
-        
-        <div class="nav-item" onclick="loadPage('https://duckduckgo.com')">🔍<span class="nav-label">Buscador Seguro</span></div>
-        <div class="nav-item" onclick="loadPage('https://search.brave.com')">🦁<span class="nav-label">Brave Search</span></div>
-        <div class="nav-item" onclick="loadPage('https://virustotal.com')">🛡️<span class="nav-label">VirusTotal</span></div>
-        <div class="nav-item" onclick="loadPage('https://github.com')">💻<span class="nav-label">Mi GitHub</span></div>
-        
-        <div style="margin-top: auto;" class="nav-item" onclick="location.reload()">🔄<span class="nav-label">Recargar Hub</span></div>
-    </div>
+<div class="sidebar">
+    <img src="logo.jpg" class="logo">
+    <div class="nav-item" onclick="openWeb('https://gemini.google.com')">✨ <span class="nav-text">Gemini AI</span></div>
+    <div class="nav-item" onclick="openWeb('https://aistudio.google.com')">🤖 <span class="nav-text">AI Studio</span></div>
+    <div class="nav-item" onclick="openWeb('https://mail.google.com')">📧 <span class="nav-text">Gmail</span></div>
+    <div class="nav-item" onclick="openWeb('https://drive.google.com')">☁️ <span class="nav-text">Drive</span></div>
+    <div class="nav-item" onclick="openWeb('https://github.com')">🐙 <span class="nav-text">GitHub</span></div>
+    <div class="nav-item" onclick="openWeb('https://lovable.dev')">💛 <span class="nav-text">Lovable</span></div>
+    <div class="nav-item" onclick="openWeb('https://jsfiddle.net')">🎻 <span class="nav-text">JSFiddle</span></div>
+    <div class="nav-item" onclick="openWeb('https://codepen.io')">🖋️ <span class="nav-text">CodePen</span></div>
+    <div class="nav-item" onclick="openWeb('https://www.passwordmonster.com')">👾 <span class="nav-text">Pass Monster</span></div>
+    <div class="nav-item" onclick="openWeb('https://iplogger.org/es/')">📍 <span class="nav-text">IP Logger</span></div>
+    <div class="nav-item" onclick="openWeb('https://technical.city/es')">💻 <span class="nav-text">Tech City</span></div>
+    <div class="nav-item" onclick="openWeb('https://learn-anything.xyz')">🧠 <span class="nav-text">Learn Anything</span></div>
+</div>
 
-    <div class="main-content">
-        <div class="top-bar">
-            <div class="shield-badge">Shield Active v2.1</div>
-            <input type="text" id="urlInput" placeholder="Introduce una URL o busca algo...">
-            <button class="btn" onclick="navigate()">NAVEGAR</button>
-        </div>
-        
-        <div class="browser-body">
-            <iframe id="viewport" src="https://duckduckgo.com"></iframe>
-        </div>
+<div class="main">
+    <div class="top-bar">
+        <div class="status-badge">SHIELD SECURE</div>
+        <input type="text" id="urlInput" placeholder="Pega un link o busca...">
+        <button onclick="navigate()" style="background:var(--accent); color:white; border:none; padding:10px 20px; border-radius:20px; cursor:pointer;">IR</button>
     </div>
+    <div class="view-container">
+        <iframe id="viewport" src="https://jsfiddle.net"></iframe>
+    </div>
+</div>
 
-    <script>
+<script>
+    function openWeb(url) {
         const viewport = document.getElementById('viewport');
-        const urlInput = document.getElementById('urlInput');
-
-        // Función principal de navegación
-        function navigate() {
-            let val = urlInput.value.trim();
-            if (!val) return;
-
-            if (val.includes('.') && !val.includes(' ')) {
-                // Si es una URL, intentamos cargarla o abrirla
-                const url = val.startsWith('http') ? val : 'https://' + val;
-                loadPage(url);
-            } else {
-                // Si es una búsqueda, usamos DuckDuckGo (falla menos en iframes)
-                const searchUrl = `https://duckduckgo.com/?q=${encodeURIComponent(val)}&kp=-2`;
-                viewport.src = searchUrl;
-            }
+        // Lista de webs que SIEMPRE bloquean iframes
+        const protected = ['google.com', 'github.com', 'lovable.dev', 'aistudio'];
+        
+        const isProtected = protected.some(d => url.includes(d));
+        
+        if (isProtected) {
+            // Abrimos en una ventana nueva pero controlada
+            window.open(url, '_blank', 'width=1200,height=800');
+        } else {
+            viewport.src = url;
         }
+    }
 
-        // Función para cargar páginas inteligentemente
-        function loadPage(url) {
-            // Brave y VirusTotal SIEMPRE rechazan iframes, así que los abrimos fuera
-            if (url.includes('brave.com') || url.includes('virustotal.com') || url.includes('google.com')) {
-                window.open(url, '_blank');
-            } else {
-                viewport.src = url;
-            }
-        }
-
-        // Atajo de teclado 'Enter'
-        urlInput.addEventListener("keypress", (e) => {
-            if (e.key === "Enter") navigate();
-        });
-    </script>
+    function navigate() {
+        let val = document.getElementById('urlInput').value;
+        if(!val.startsWith('http')) val = 'https://' + val;
+        openWeb(val);
+    }
+</script>
 </body>
 </html>
