@@ -2,19 +2,17 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Blue Shield | Navigator v1.0</title>
+    <title>Blue Shield | Elite Edition</title>
     <style>
         :root {
             --bg: #0d1117;
             --bar: #161b22;
             --accent: #3081f7;
             --text: #c9d1d9;
-            --danger: #f85149;
         }
 
         body, html { margin: 0; padding: 0; height: 100%; background: var(--bg); font-family: 'Segoe UI', sans-serif; overflow: hidden; }
 
-        /* Barra de navegación */
         .navbar {
             background: var(--bar);
             padding: 10px 20px;
@@ -24,14 +22,21 @@
             border-bottom: 2px solid var(--accent);
         }
 
+        /* ESPACIO PARA TU LOGO */
+        .logo {
+            height: 30px;
+            cursor: pointer;
+        }
+
         #urlInput {
             flex: 1;
             background: #010409;
             border: 1px solid #30363d;
             border-radius: 20px;
             padding: 8px 15px;
-            color: var(--accent);
+            color: #58a6ff;
             outline: none;
+            font-family: 'Consolas', monospace;
         }
 
         .btn {
@@ -39,79 +44,62 @@
             color: white;
             border: none;
             padding: 8px 15px;
-            border-radius: 5px;
+            border-radius: 8px;
             cursor: pointer;
             font-weight: bold;
+            transition: 0.3s;
         }
 
-        /* El Escudo (Anti-Phishing) */
-        #shield-status {
-            font-size: 0.8em;
-            padding: 5px 10px;
-            border-radius: 4px;
-            background: #238636;
-            color: white;
-        }
+        .btn:hover { background: #1f6feb; transform: scale(1.05); }
 
-        /* Área del navegador */
         .browser-container {
             height: calc(100vh - 60px);
             width: 100%;
+            background: white;
         }
 
         iframe {
             width: 100%;
             height: 100%;
             border: none;
-            background: white;
         }
     </style>
 </head>
 <body>
 
 <div class="navbar">
-    <div id="shield-status">🛡️ SHIELD: OK</div>
-    <input type="text" id="urlInput" placeholder="Introduce una URL o busca en Blue Shield...">
-    <button class="btn" onclick="navigate()">IR</button>
+    <img src="https://img.icons8.com/fluency/48/shield.png" class="logo" alt="Blue Shield">
+    <b style="color: var(--accent); font-size: 1.2em;">BLUE SHIELD</b>
+    
+    <input type="text" id="urlInput" placeholder="Busca en Brave o introduce URL...">
+    
+    <button class="btn" onclick="navigate()">NAVEGAR</button>
+    <button class="btn" style="background:#21262d" onclick="location.reload()">🔄</button>
 </div>
 
 <div class="browser-container">
-    <iframe id="viewport" src="https://www.google.com/search?igu=1"></iframe>
+    <iframe id="viewport" src="https://search.brave.com"></iframe>
 </div>
 
 <script>
     const urlInput = document.getElementById('urlInput');
     const viewport = document.getElementById('viewport');
-    const shield = document.getElementById('shield-status');
-
-    // Lista negra de palabras sospechosas (Anti-Phishing)
-    const blacklist = ['login', 'free-skins', 'steam-giveaway', 'hack', 'password'];
 
     function navigate() {
-        let url = urlInput.value.trim();
-        
-        // Comprobación de seguridad Blue Shield
-        const isSuspicious = blacklist.some(word => url.toLowerCase().includes(word));
-        
-        if (isSuspicious) {
-            shield.innerText = "⚠️ AMENAZA DETECTADA";
-            shield.style.background = "#f85149";
-            if(!confirm("Blue Shield ha detectado palabras sospechosas. ¿Quieres entrar bajo tu riesgo?")) {
-                return;
-            }
-        } else {
-            shield.innerText = "🛡️ SHIELD: OK";
-            shield.style.background = "#238636";
-        }
+        let val = urlInput.value.trim();
+        if (!val) return;
 
-        if (!url.startsWith('http')) {
-            url = 'https://' + url;
+        let url;
+        // Si no tiene puntos o parece una búsqueda, usamos Brave Search
+        if (!val.includes('.') || val.includes(' ')) {
+            url = `https://search.brave.com/search?q=${encodeURIComponent(val)}`;
+        } else {
+            url = val.startsWith('http') ? val : 'https://' + val;
         }
         
         viewport.src = url;
     }
 
-    // Navegar al dar a Enter
     urlInput.addEventListener("keypress", (e) => {
         if (e.key === "Enter") navigate();
     });
