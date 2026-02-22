@@ -1,258 +1,186 @@
 import sys
 import json
-import os
-from datetime import datetime
+import socket
+import requests
+import psutil
 from PyQt6.QtWidgets import *
 from PyQt6.QtCore import *
 from PyQt6.QtWebEngineWidgets import *
-from PyQt6.QtWebEngineCore import *
 from PyQt6.QtGui import *
 
-# --- CONFIGURACIÓN Y SEGURIDAD ---
-USER_DATA_FILE = "shield_users.json"
-HISTORY_FILE = "shield_history.log"
+# --- BASE DE DATOS LOCAL ---
+DB_PATH = "shield_vault.json"
 
-class BlueShieldStyles:
-    """Clase para gestionar todo el diseño visual del sistema"""
-    MAIN_THEME = """
-        QMainWindow { background-color: #0d1117; }
-        QToolBar { 
-            background: #161b22; 
-            border-bottom: 2px solid #3081f7; 
-            padding: 8px; 
-            spacing: 15px; 
-        }
-        QLineEdit { 
-            background: #010409; 
-            color: #58a6ff; 
-            border: 1px solid #30363d; 
-            border-radius: 12px; 
-            padding: 8px 15px; 
-            font-family: 'Consolas', monospace; 
-        }
-        QTabWidget::pane { border-top: 1px solid #30363d; background: #0d1117; }
-        QTabBar::tab { 
-            background: #1c2128; 
-            color: #8b949e; 
-            padding: 12px 25px; 
-            border-right: 1px solid #0d1117; 
-            min-width: 160px;
-            font-weight: bold;
-        }
-        QTabBar::tab:selected { 
-            background: #3081f7; 
-            color: white; 
-            border-bottom: 2px solid white;
-        }
-        QPushButton {
-            background: #21262d;
-            color: white;
-            border: 1px solid #30363d;
-            border-radius: 8px;
-            padding: 8px 15px;
-            font-weight: bold;
-        }
-        QPushButton:hover { background: #3081f7; border-color: #58a6ff; }
-        QTextEdit {
-            background: #010409;
-            color: #00ff88;
-            font-family: 'Consolas';
-            border: 1px solid #30363d;
-        }
-    """
+def save_user(user, password):
+    data = {"user": user, "password": password}
+    with open(DB_PATH, "w") as f:
+        json.dump(data, f)
 
-# --- CLASES DE NAVEGACIÓN ---
-class ShieldWebPage(QWebEnginePage):
-    """Manejo avanzado de ventanas y permisos"""
-    def __init__(self, window_parent):
-        super().__init__()
-        self.window_parent = window_parent
+def load_user():
+    if os.path.exists(DB_PATH):
+        with open(DB_PATH, "r") as f:
+            return json.load(f)
+    return None
 
-    def createWindow(self, _type):
-        return self.window_parent.add_new_tab()
-
-    def certificateError(self, error):
-        # Aquí podrías añadir lógica de auditoría de SSL
-        return super().certificateError(error)
-
-# --- VENTANA DE AUTH ---
+# --- PANTALLA DE INICIO DE SESIÓN / REGISTRO ---
 class AuthSystem(QDialog):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Blue Shield | Terminal Auth")
-        self.setFixedSize(400, 500)
-        self.setWindowFlags(Qt.WindowType.FramelessWindowHint)
+        self.setWindowTitle("Blue Shield | Security Access")
+        self.setFixedSize(400, 550)
+        self.setStyleSheet("background-color: #0a0c10; color: white; font-family: 'Segoe UI';")
         self.init_ui()
 
     def init_ui(self):
         layout = QVBoxLayout()
-        self.setStyleSheet("background-color: #0a0c10; color: white; border: 1px solid #3081f7;")
         
-        # Logo y Título
-        logo_label = QLabel("🛡️")
-        logo_label.setStyleSheet("font-size: 80px; margin-top: 20px;")
-        logo_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        # Icono Pro
+        self.logo = QLabel("🛡️")
+        self.logo.setStyleSheet("font-size: 70px;")
+        self.logo.setAlignment(Qt.AlignmentFlag.AlignCenter)
         
-        title = QLabel("BLUE SHIELD OS")
-        title.setStyleSheet("font-size: 24px; font-weight: 800; color: #3081f7; letter-spacing: 5px;")
-        title.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        
-        self.user_input = QLineEdit()
-        self.user_input.setPlaceholderText("Identificación de Operador...")
-        
-        self.pass_input = QLineEdit()
-        self.pass_input.setPlaceholderText("Clave de Acceso...")
-        self.pass_input.setEchoMode(QLineEdit.EchoMode.Password)
-        
-        btn_layout = QHBoxLayout()
-        login_btn = QPushButton("ACCEDER")
-        login_btn.clicked.connect(self.handle_login)
-        register_btn = QPushButton("REGISTRAR")
-        register_btn.clicked.connect(self.handle_register)
-        
-        btn_layout.addWidget(login_btn)
-        btn_layout.addWidget(register_btn)
+        self.title = QLabel("BLUE SHIELD ELITE")
+        self.title.setStyleSheet("font-size: 22px; font-weight: bold; color: #3081f7; letter-spacing: 3px;")
+        self.title.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        layout.addWidget(logo_label)
-        layout.addWidget(title)
+        self.user_in = QLineEdit()
+        self.user_in.setPlaceholderText("Nombre de Operador")
+        self.user_in.setStyleSheet("background: #161b22; border: 1px solid #30363d; padding: 12px; border-radius: 8px;")
+
+        self.pass_in = QLineEdit()
+        self.pass_in.setPlaceholderText("Clave Maestra")
+        self.pass_in.setEchoMode(QLineEdit.EchoMode.Password)
+        self.pass_in.setStyleSheet("background: #161b22; border: 1px solid #30363d; padding: 12px; border-radius: 8px;")
+
+        self.btn_login = QPushButton("INICIAR PROTOCOLO")
+        self.btn_login.setStyleSheet("background: #3081f7; font-weight: bold; padding: 15px; border-radius: 10px; margin-top: 10px;")
+        self.btn_login.clicked.connect(self.login)
+
+        self.btn_reg = QPushButton("CREAR NUEVA CUENTA")
+        self.btn_reg.setStyleSheet("background: transparent; color: #8b949e; text-decoration: underline; border: none;")
+        self.btn_reg.clicked.connect(self.register)
+
+        layout.addWidget(self.logo)
+        layout.addWidget(self.title)
         layout.addSpacing(30)
-        layout.addWidget(self.user_input)
-        layout.addWidget(self.pass_input)
-        layout.addLayout(btn_layout)
-        layout.addStretch()
-        
+        layout.addWidget(self.user_in)
+        layout.addWidget(self.pass_in)
+        layout.addWidget(self.btn_login)
+        layout.addWidget(self.btn_reg)
         self.setLayout(layout)
 
-    def handle_login(self):
-        # Lógica de sesión simple (puedes expandirla con JSON)
-        if self.user_input.text() == "Enric" and self.pass_input.text() == "1234":
+    def login(self):
+        saved = load_user()
+        if saved and self.user_in.text() == saved['user'] and self.pass_in.text() == saved['password']:
             self.accept()
         else:
-            QMessageBox.critical(self, "Acceso Denegado", "Credenciales Inválidas.")
+            QMessageBox.warning(self, "Error", "Acceso no autorizado.")
 
-    def handle_register(self):
-        QMessageBox.information(self, "Registro", "Función de registro de nuevo operador enviada al administrador.")
+    def register(self):
+        if self.user_in.text() and self.pass_in.text():
+            save_user(self.user_in.text(), self.pass_in.text())
+            QMessageBox.information(self, "Éxito", "Cuenta creada. Ya puedes iniciar sesión.")
+        else:
+            QMessageBox.warning(self, "Error", "Rellena los campos para registrarte.")
 
-# --- VENTANA PRINCIPAL ---
-class BlueShieldElite(QMainWindow):
+# --- MÓDULO DE RED (IP PRIVADA, PÚBLICA, ETC) ---
+class NetworkStats(QWidget):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Blue Shield Elite | Terminal OS v3.0")
-        self.setWindowIcon(QIcon("logo.jpg"))
-        self.resize(1400, 900)
+        layout = QVBoxLayout()
+        self.info = QTextEdit()
+        self.info.setReadOnly(True)
+        self.info.setStyleSheet("background: #010409; color: #00ff88; font-family: 'Consolas'; font-size: 14px; border: none;")
+        layout.addWidget(self.info)
+        self.setLayout(layout)
+        self.refresh_stats()
 
-        # Contenedor Central
-        self.central_widget = QWidget()
-        self.setCentralWidget(self.central_widget)
-        self.layout = QVBoxLayout(self.central_widget)
-        self.layout.setContentsMargins(0, 0, 0, 0)
-        self.layout.setSpacing(0)
+    def refresh_stats(self):
+        # IP Privada
+        hostname = socket.gethostname()
+        ip_privada = socket.gethostbyname(hostname)
+        # IP Pública
+        try:
+            ip_publica = requests.get('https://api.ipify.org').text
+        except:
+            ip_publica = "Desconectado"
+        
+        stats = f"""
+        [ BLUE SHIELD NETWORK AUDIT ]
+        ----------------------------------
+        HOSTNAME: {hostname}
+        IP PRIVADA: {ip_privada}
+        IP PÚBLICA: {ip_publica}
+        
+        [ INTERFACES DE RED ]
+        """
+        for interface, addrs in psutil.net_if_addrs().items():
+            stats += f"\n- {interface}: {addrs[0].address}"
+            
+        self.info.setText(stats)
 
-        # Sistema de Pestañas
+# --- VENTANA PRINCIPAL ---
+class BlueShieldApp(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("Blue Shield Elite | Terminal")
+        self.resize(1280, 800)
+
+        # Tabs
         self.tabs = QTabWidget()
         self.tabs.setDocumentMode(True)
         self.tabs.setTabsClosable(True)
         self.tabs.tabCloseRequested.connect(self.close_tab)
-        
-        # Consola de Comandos (Ocultable)
-        self.terminal = QTextEdit()
-        self.terminal.setReadOnly(True)
-        self.terminal.setFixedHeight(150)
-        self.terminal.setPlaceholderText("Sistema Blue Shield inicializado...")
-        self.terminal.hide()
+        self.setCentralWidget(self.tabs)
 
-        # Layout Final
-        self.layout.addWidget(self.tabs)
-        self.layout.addWidget(self.terminal)
+        # Toolbar
+        nav_bar = QToolBar()
+        self.addToolBar(nav_bar)
 
-        self.init_toolbar()
-        self.setStyleSheet(BlueShieldStyles.MAIN_THEME)
-
-        # Pestañas de Inicio
-        self.add_new_tab(QUrl("https://grok.com"), "Grok AI")
-        self.add_new_tab(QUrl("https://iplogger.org"), "IP Logger")
-        self.log_action("Sistema cargado satisfactoriamente.")
-
-    def init_toolbar(self):
-        self.toolbar = QToolBar("Navegación")
-        self.addToolBar(self.toolbar)
-
-        # Acciones
-        back_btn = QAction("⬅️", self)
-        back_btn.triggered.connect(lambda: self.tabs.currentWidget().back())
-        self.toolbar.addAction(back_btn)
-
-        reload_btn = QAction("🔄", self)
-        reload_btn.triggered.connect(lambda: self.tabs.currentWidget().reload())
-        self.toolbar.addAction(reload_btn)
-
-        add_btn = QAction("➕", self)
-        add_btn.triggered.connect(lambda: self.add_new_tab(QUrl("https://www.bing.com"), "Nueva Pestaña"))
-        self.toolbar.addAction(add_btn)
-
-        # Barra de búsqueda
         self.url_bar = QLineEdit()
-        self.url_bar.setPlaceholderText("¿Qué protocolo vamos a auditar hoy, Enric?")
-        self.url_bar.returnPressed.connect(self.navigate_to_url)
-        self.toolbar.addWidget(self.url_bar)
+        self.url_bar.returnPressed.connect(self.navigate)
+        
+        nav_bar.addAction("➕", self.add_new_tab)
+        nav_bar.addWidget(self.url_bar)
+        nav_bar.addAction("📟 RED", self.add_network_tab)
 
-        # Botón Consola
-        term_btn = QAction("📟 CONSOLA", self)
-        term_btn.triggered.connect(self.toggle_terminal)
-        self.toolbar.addAction(term_btn)
+        # Estilo
+        self.setStyleSheet("""
+            QMainWindow { background-color: #0d1117; }
+            QToolBar { background: #161b22; border-bottom: 2px solid #3081f7; padding: 10px; }
+            QLineEdit { background: #010409; color: #58a6ff; border: 1px solid #30363d; padding: 8px; border-radius: 10px; }
+            QTabBar::tab { background: #1c2128; color: white; padding: 12px; min-width: 120px; }
+            QTabBar::tab:selected { background: #3081f7; }
+        """)
 
-    def add_new_tab(self, qurl=None, label="Cargando..."):
+        # Inicio
+        self.add_new_tab(QUrl("https://grok.com"), "Grok AI")
+
+    def add_new_tab(self, qurl=None, label="Nueva Pestaña"):
+        if not qurl: qurl = QUrl("https://search.brave.com")
         browser = QWebEngineView()
-        page = ShieldWebPage(self)
-        browser.setPage(page)
-        
-        if qurl:
-            browser.setUrl(qurl)
-        
+        browser.setUrl(qurl)
         i = self.tabs.addTab(browser, label)
         self.tabs.setCurrentIndex(i)
-        
-        # Conexiones de señales
-        browser.urlChanged.connect(lambda q, b=browser: self.update_url(q, b))
-        browser.titleChanged.connect(lambda t, b=browser: self.update_title(t, b))
-        browser.loadFinished.connect(lambda _, b=browser: self.log_action(f"Cargado: {b.url().toString()}"))
-        
-        return page
+        browser.urlChanged.connect(lambda q, b=browser: self.url_bar.setText(q.toString()) if b == self.tabs.currentWidget() else None)
 
-    def log_action(self, message):
-        time_str = datetime.now().strftime("%H:%M:%S")
-        self.terminal.append(f"[{time_str}] > {message}")
+    def add_network_tab(self):
+        self.tabs.addTab(NetworkStats(), "AUDITORÍA RED")
+        self.tabs.setCurrentIndex(self.tabs.count()-1)
 
-    def toggle_terminal(self):
-        if self.terminal.isHidden():
-            self.terminal.show()
-        else:
-            self.terminal.hide()
-
-    def navigate_to_url(self):
-        q = QUrl(self.url_bar.text())
-        if q.scheme() == "": q.setScheme("https")
-        self.tabs.currentWidget().setUrl(q)
-
-    def update_url(self, q, browser):
-        if browser == self.tabs.currentWidget():
-            self.url_bar.setText(q.toString())
-
-    def update_title(self, title, browser):
-        i = self.tabs.indexOf(browser)
-        if i != -1: self.tabs.setTabText(i, title[:20])
+    def navigate(self):
+        url = QUrl(self.url_bar.text())
+        if url.scheme() == "": url.setScheme("https")
+        self.tabs.currentWidget().setUrl(url)
 
     def close_tab(self, i):
-        if self.tabs.count() > 1:
-            self.tabs.removeTab(i)
+        if self.tabs.count() > 1: self.tabs.removeTab(i)
 
-# --- LANZADOR ---
+import os
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    app.setApplicationName("Blue Shield Elite")
-    
     auth = AuthSystem()
     if auth.exec() == QDialog.DialogCode.Accepted:
-        window = BlueShieldElite()
+        window = BlueShieldApp()
         window.show()
         sys.exit(app.exec())
